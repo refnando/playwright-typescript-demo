@@ -28,7 +28,7 @@ export async function analyzeTestFailure(
     const jsonStart = raw.indexOf("{");
     const jsonEnd = raw.lastIndexOf("}");
     if (jsonStart === -1 || jsonEnd === -1) {
-      console.error("⚠️ No se detectó estructura JSON válida en el log.");
+      console.error("⚠️ No valid JSON structure detected in log file.");
       return;
     }
 
@@ -38,7 +38,7 @@ export async function analyzeTestFailure(
     // --- Find the failed test ---
     const failedTest = findFailedTest(report);
     if (!failedTest) {
-      console.log("✅ No se encontraron tests fallidos.");
+      console.log("✅ No failed tests found.");
       return;
     }
 
@@ -62,8 +62,8 @@ export async function analyzeTestFailure(
     const outputFile = path.join(outputDir, "last-prompt.txt");
     fs.writeFileSync(outputFile, prompt, "utf-8");
 
-    console.log(`🧠 Prompt generado en: ${outputFile}`);
-    console.log("🚀 Enviando prompt al modelo GPT...\n");
+    console.log(`🧠 Prompt generated at: ${outputFile}`);
+    console.log("🚀 Sending prompt to OpenAI...\n");
 
     // --- Send the prompt to OpenAI ---
     const completion = await openai.chat.completions.create({
