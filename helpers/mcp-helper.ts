@@ -1,7 +1,7 @@
 /**
  * mcp-helper.ts
- * Analiza el test fallido más reciente desde Playwright y envía un análisis detallado a OpenAI.
- * Incluye el screenshot y el trace.zip en Base64 dentro del prompt.
+ * Analyzes the most recent Playwright failed test and sends a detailed diagnostic to OpenAI.
+ * Includes the screenshot and trace.zip encoded in Base64 within the prompt.
  */
 
 import fs from "fs";
@@ -23,7 +23,7 @@ export async function analyzeTestFailure(
       return;
     }
 
-    // --- Leer y limpiar el JSON del log ---
+    // --- Read and sanitize JSON log content ---
     const raw = fs.readFileSync(resultsPath, "utf-8").trim();
     const jsonStart = raw.indexOf("{");
     const jsonEnd = raw.lastIndexOf("}");
@@ -35,14 +35,14 @@ export async function analyzeTestFailure(
     const cleanJson = raw.slice(jsonStart, jsonEnd + 1);
     const report = JSON.parse(cleanJson);
 
-    // --- Buscar el test fallido ---
+    // --- Find the failed test ---
     const failedTest = findFailedTest(report);
     if (!failedTest) {
       console.log("✅ No se encontraron tests fallidos.");
       return;
     }
 
-    // --- Adjuntar archivos si existen ---
+    // --- Attach related files if available ---
     const screenshotPath = findScreenshot();
     const tracePath = findTrace();
 
@@ -53,10 +53,10 @@ export async function analyzeTestFailure(
       ? truncateBase64(encodeFileBase64(tracePath), 20000)
       : "(no trace found)";
 
-    // --- Crear prompt estilo "Copy prompt" ---
+    // --- Build the AI analysis prompt ---
     const prompt = buildPrompt(failedTest, screenshotBase64, traceBase64);
 
-    // --- Guardar prompt localmente ---
+    // --- Save prompt locally for debugging ---
     const outputDir = "reports/html";
     if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
     const outputFile = path.join(outputDir, "last-prompt.txt");
@@ -65,38 +65,38 @@ export async function analyzeTestFailure(
     console.log(`🧠 Prompt generado en: ${outputFile}`);
     console.log("🚀 Enviando prompt al modelo GPT...\n");
 
-    // --- Enviar a OpenAI ---
+    // --- Send the prompt to OpenAI ---
     const completion = await openai.chat.completions.create({
       model: process.env.OPENAI_MODEL || "gpt-4o-mini",
       messages: [
         {
           role: "system",
           content:
-            "Eres un experto en QA Automation especializado en Playwright y TypeScript. Analiza errores y sugiere soluciones claras y aplicables.",
+            "You are a QA Automation expert specialized in Playwright and TypeScript. Analyze the following test failure and suggest clear, actionable solutions.",
         },
         { role: "user", content: prompt },
       ],
     });
 
     const suggestion =
-      completion.choices[0].message?.content || "(sin respuesta)";
-    console.log("🤖 Análisis de OpenAI:\n");
+      completion.choices[0].message?.content || "(no response)";
+    console.log("🤖 OpenAI Analysis:\n");
     console.log(suggestion);
 
     const analysisFile = path.join(outputDir, "last-analysis.txt");
     fs.writeFileSync(analysisFile, suggestion, "utf-8");
-    console.log(`\n📁 Análisis guardado en: ${analysisFile}`);
+    console.log(`\n📁 Analysis saved at: ${analysisFile}`);
   } catch (err: unknown) {
     if (err instanceof Error) {
-      console.error("❌ Error en analyzeTestFailure:", err.message);
+      console.error("❌ Error in analyzeTestFailure:", err.message);
     } else {
-      console.error("❌ Error en analyzeTestFailure:", String(err));
+      console.error("❌ Error in analyzeTestFailure:", String(err));
     }
   }
 }
 
 /**
- * Busca el primer test fallido dentro del JSON.
+ * Finds the first failed test inside the Playwright JSON report.
  */
 function findFailedTest(report: any): any | null {
   if (report.suites) {
@@ -135,8 +135,9 @@ function findFailedTest(report: any): any | null {
   return null;
 }
 
+
 /**
- * Construye el prompt para el análisis, incluyendo screenshot y trace.
+ * Builds the OpenAI prompt for the analysis, including screenshot and trace data.
  */
 function buildPrompt(test: any, screenshot: string, trace: string): string {
   return `
@@ -179,7 +180,7 @@ ${trace}
 }
 
 /**
- * Busca un screenshot fallido en test-results/.
+ * Finds a failed test screenshot under the test-results directory.
  */
 function findScreenshot(): string | null {
   const dir = "test-results";
@@ -194,7 +195,7 @@ function findScreenshot(): string | null {
 }
 
 /**
- * Busca el trace.zip más reciente.
+ * Finds the most recent trace.zip file.
  */
 function findTrace(): string | null {
   const dir = "test-results";
@@ -209,7 +210,7 @@ function findTrace(): string | null {
 }
 
 /**
- * Convierte un archivo en Base64.
+ * Encodes a given file in Base64 format.
  */
 function encodeFileBase64(filePath: string): string {
   try {
@@ -220,11 +221,15 @@ function encodeFileBase64(filePath: string): string {
   }
 }
 
-// Ejecutar directamente si se llama desde la terminal
+
+
 if (require.main === module) {
   analyzeTestFailure();
 }
 
+/**
+ * Truncates large Base64 data to prevent exceeding prompt length limits.
+ */
 function truncateBase64(data: string, maxLength: number): string {
   if (data.length > maxLength) {
     return (
