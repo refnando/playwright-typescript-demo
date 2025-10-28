@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test';
+import { HomePage } from '../pages/HomePage/HomePage';
 import { LoginPage } from '../pages/LoginPage/LoginPage';
+import { NUMBERS } from '../utils/constants/values';
 
 const user = process.env.USER_NAME as string;
 const pwd = process.env.PASSWORD as string;
@@ -9,11 +11,10 @@ test.beforeEach(async ({ page }) => {
   await loginpage.validLogin(user, pwd);
 });
 
-test('has title', async ({ page }) => {
-  await page.goto('https://playwright.dev/');
-
-  // Expect a title "to contain" a substring.
-  await expect(page).toHaveTitle(/Playwright/);
+test('Add product into Shopping cart', async ({ page }) => {
+  const inventory = new HomePage(page);
+  await inventory.addProductToCart('Sauce Labs Backpack');
+  await expect(inventory.shoppingCartButton).toHaveText(NUMBERS.ONE.toString());
 });
 
 

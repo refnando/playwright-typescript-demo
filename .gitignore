@@ -1,5 +1,3 @@
-
-# Playwright
 node_modules/
 /test-results/
 /playwright-report/
@@ -10,3 +8,4 @@ tests-examples/
 .env
 .vscode/
 *.log
+/reports/

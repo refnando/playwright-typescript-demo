@@ -1,1 +1,2 @@
-npm test
+yarn audit
+yarn pre_push
