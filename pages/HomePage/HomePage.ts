@@ -5,6 +5,7 @@ export class HomePage {
 
   readonly appLogo: Locator;
   readonly shoppingCartButton: Locator;
+  readonly shoppingCartBadge: Locator;
 
   readonly productsLabel: Locator;
   readonly sortDropdown: Locator;
@@ -21,6 +22,8 @@ export class HomePage {
     this.shoppingCartButton = page
       .locator("#shopping_cart_container")
       .getByRole("link");
+    this.shoppingCartBadge = this.page.locator(".shopping_cart_badge");
+    
 
     this.productsLabel = page.getByText("Products", { exact: true });
     this.sortDropdown = page.locator(".select.product_sort_container");
@@ -35,21 +38,19 @@ export class HomePage {
     await this.sortDropdown.selectOption({ label: option });
   }
 
-  async getProductsByName(name: string): Promise<Locator> {
-    return this.page
-      .locator(".inventory_item")
-      .filter({
-        has: this.page.locator(".inventory_item_name", { hasText: name }),
-      });
+  getProductByName(name: string): Locator {
+    return this.inventoryItems.filter({
+      has: this.inventoryItemNames.filter({ hasText: name }),
+    });
   }
 
   async addProductToCart(name: string) {
-    const product = await this.getProductsByName(name);
+    const product = this.getProductByName(name);
     await product.locator("button.btn_inventory").click();
   } 
 
   async getProductPrice(name: string): Promise<string> {
-    const product = await this.getProductsByName(name);
-    return product.locator(".inventory_item_price").innerText();
+    const product = this.getProductByName(name);
+    return await product.locator(".inventory_item_price").innerText();
   }
 }

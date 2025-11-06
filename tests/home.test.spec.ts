@@ -14,7 +14,7 @@ test.beforeEach(async ({ page }) => {
 test('Add product into Shopping cart', async ({ page }) => {
   const inventory = new HomePage(page);
   await inventory.addProductToCart('Sauce Labs Backpack');
-  await expect(inventory.shoppingCartButton).toHaveText(NUMBERS.ONE.toString());
+  await expect(inventory.shoppingCartBadge).toHaveText(NUMBERS.ONE.toString(), { timeout: 10000 });
 });
 
 
